@@ -182,3 +182,45 @@ Please also consider adding your publication to the list of Flower-based publica
 ## Contributing to Flower
 
 We welcome contributions. Please see [CONTRIBUTING.md](CONTRIBUTING.md) to get started!
+
+### DevContainer (Experimental)
+
+An **experimental DevContainer** setup is included to provide a consistent, reproducible development environment for the C++ SDK.  
+Since the SDK depends on the `proto` folder located two levels above, placing the DevContainer configuration at the root simplifies the setup.  
+This setup is primarily intended for development and testing workflows and may evolve over time.
+
+#### How to Install and Use
+
+The DevContainer is well-integrated with **Visual Studio Code**, offering a smooth development experience out of the box.  
+For more details on setting up DevContainers with VS Code, see the official [documentation](https://code.visualstudio.com/docs/devcontainers/containers).
+
+Alternatively, you can use it via the **command line interface (CLI)** if you prefer working outside the VS Code UI.
+
+##### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Dev Container CLI](https://containers.dev/cli)
+
+##### Getting Started
+
+1. Open a terminal and navigate to this folder.
+
+2. Start the DevContainer:
+```sh
+devcontainer up --workspace-folder .
+```
+
+3. To open a shell inside the container:
+```sh
+devcontainer exec --workspace-folder . bash
+```
+
+4. To build the C++ SDK inside the container:
+```sh
+cd cc/cc/flwr
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build
+cd build
+make -j $(nproc)
+```
+
+> ⚠️ Note: This DevContainer setup is experimental and may change in future versions.
