@@ -1,6 +1,7 @@
 #include "communicator.h"
 
 const std::string KEY_NODE = "node";
+// TODO: need to determine what is the new value now
 const std::string KEY_TASK_INS = "current_task_ins";
 
 std::map<std::string, std::optional<flwr::proto::Node>> node_store;
@@ -19,7 +20,7 @@ std::optional<flwr::proto::Node> get_node_from_store() {
   return node->second;
 }
 
-bool validate_task_ins(const flwr::proto::Message &task_ins,
+bool validate_messages(const flwr::proto::Message &task_ins,
                        const bool discard_reconnect_ins) {
   return task_ins.has_content();
 }
@@ -62,12 +63,12 @@ void delete_node_from_store() {
   }
 }
 
-std::optional<flwr::proto::TaskIns> get_current_task_ins() {
+std::optional<flwr::proto::Message> get_current_task_ins() {
   std::lock_guard<std::mutex> state_lock(state_mutex);
   auto current_task_ins = state.find(KEY_TASK_INS);
   if (current_task_ins == state.end() ||
       !current_task_ins->second.has_value()) {
-    std::cerr << "No current TaskIns" << std::endl;
+    std::cerr << "No current Messages" << std::endl;
     return std::nullopt;
   }
   return current_task_ins->second;
@@ -115,13 +116,13 @@ void delete_node(Communicator *communicator) {
   delete_node_from_store();
 }
 
-std::optional<flwr::proto::TaskIns> receive(Communicator *communicator) {
+std::optional<flwr::proto::Message> receive(Communicator *communicator) {
   auto node = get_node_from_store();
   if (!node) {
     return std::nullopt;
   }
-  flwr::proto::PullTaskInsResponse response;
-  flwr::proto::PullTaskInsRequest request;
+  flwr::proto::PullMessageResponse response;
+  flwr::proto::PullMessageRequest request;
 
   request.set_allocated_node(new flwr::proto::Node(*node));
 
@@ -136,14 +137,14 @@ std::optional<flwr::proto::TaskIns> receive(Communicator *communicator) {
   }
 
   if (response.task_ins_list_size() > 0) {
-    flwr::proto::TaskIns task_ins = response.task_ins_list().at(0);
-    if (validate_task_ins(task_ins, true)) {
+    flwr::proto::Message message = response.task_ins_list().at(0);
+    if (validate_messages(message, true)) {
       std::lock_guard<std::mutex> state_lock(state_mutex);
       state[KEY_TASK_INS] = task_ins;
       return task_ins;
     }
   }
-  std::cerr << "TaskIns list is empty." << std::endl;
+  std::cerr << "Message list is empty." << std::endl;
   return std::nullopt;
 }
 
