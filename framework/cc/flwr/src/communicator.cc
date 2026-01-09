@@ -1,10 +1,13 @@
 #include "communicator.h"
+#include <map>
+#include <mutex>
+#include <iostream>
 
 const std::string KEY_NODE = "node";
-const std::string KEY_TASK_INS = "current_task_ins";
+const std::string KEY_MESSAGE = "current_message";
 
 std::map<std::string, std::optional<flwr::proto::Node>> node_store;
-std::map<std::string, std::optional<flwr::proto::TaskIns>> state;
+std::map<std::string, std::optional<flwr::proto::Message>> state;
 
 std::mutex node_store_mutex;
 std::mutex state_mutex;
@@ -19,38 +22,32 @@ std::optional<flwr::proto::Node> get_node_from_store() {
   return node->second;
 }
 
-bool validate_task_ins(const flwr::proto::TaskIns &task_ins,
-                       const bool discard_reconnect_ins) {
-  return task_ins.has_task() && task_ins.task().has_recordset();
+bool validate_message(const flwr::proto::Message &message,
+                      const bool discard_reconnect) {
+  return message.has_metadata() && message.has_content();
 }
 
-bool validate_task_res(const flwr::proto::TaskRes &task_res) {
-  // Retrieve initialized fields in TaskRes
-  return true;
-}
-
-flwr::proto::TaskRes
-configure_task_res(const flwr::proto::TaskRes &task_res,
-                   const flwr::proto::TaskIns &ref_task_ins,
-                   const flwr::proto::Node &producer) {
-  flwr::proto::TaskRes result_task_res;
-
-  // Setting scalar fields
-  result_task_res.set_task_id("");
-  result_task_res.set_group_id(ref_task_ins.group_id());
-  result_task_res.set_run_id(ref_task_ins.run_id());
-
-  // Merge the task from the input task_res
-  *result_task_res.mutable_task() = task_res.task();
-
-  // Construct and set the producer and consumer for the task
-  *result_task_res.mutable_task()->mutable_producer() = producer;
-  *result_task_res.mutable_task()->mutable_consumer() = ref_task_ins.task().producer();
-
-  // Set ancestry in the task
-  result_task_res.mutable_task()->add_ancestry(ref_task_ins.task_id());
-
-  return result_task_res;
+flwr::proto::Message
+configure_message(const flwr::proto::Message &message,
+                  const flwr::proto::Message &ref_message,
+                  const flwr::proto::Node &producer) {
+  flwr::proto::Message result_message;
+  
+  // Copy content from input message
+  *result_message.mutable_content() = message.content();
+  
+  // Configure metadata
+  auto metadata = result_message.mutable_metadata();
+  metadata->set_run_id(ref_message.metadata().run_id());
+  metadata->set_message_id("");
+  metadata->set_src_node_id(producer.node_id());
+  metadata->set_dst_node_id(ref_message.metadata().src_node_id());
+  metadata->set_reply_to_message_id(ref_message.metadata().message_id());
+  metadata->set_group_id(ref_message.metadata().group_id());
+  metadata->set_ttl(ref_message.metadata().ttl());
+  metadata->set_message_type(message.metadata().message_type());
+  
+  return result_message;
 }
 
 void delete_node_from_store() {
@@ -61,15 +58,15 @@ void delete_node_from_store() {
   }
 }
 
-std::optional<flwr::proto::TaskIns> get_current_task_ins() {
+std::optional<flwr::proto::Message> get_current_message() {
   std::lock_guard<std::mutex> state_lock(state_mutex);
-  auto current_task_ins = state.find(KEY_TASK_INS);
-  if (current_task_ins == state.end() ||
-      !current_task_ins->second.has_value()) {
-    std::cerr << "No current TaskIns" << std::endl;
+  auto current_message = state.find(KEY_MESSAGE);
+  if (current_message == state.end() ||
+      !current_message->second.has_value()) {
+    std::cerr << "No current Message" << std::endl;
     return std::nullopt;
   }
-  return current_task_ins->second;
+  return current_message->second;
 }
 
 void create_node(Communicator *communicator) {
@@ -110,63 +107,64 @@ void delete_node(Communicator *communicator) {
   delete_node_from_store();
 }
 
-std::optional<flwr::proto::TaskIns> receive(Communicator *communicator) {
+std::optional<flwr::proto::Message> receive(Communicator *communicator) {
   auto node = get_node_from_store();
   if (!node) {
     return std::nullopt;
   }
-  flwr::proto::PullTaskInsResponse response;
-  flwr::proto::PullTaskInsRequest request;
+  flwr::proto::PullMessagesResponse response;
+  flwr::proto::PullMessagesRequest request;
 
   *request.mutable_node() = *node;
 
-  bool success = communicator->send_pull_task_ins(request, &response);
+  bool success = communicator->send_pull_messages(request, &response);
 
   if (!success) {
     return std::nullopt;
   }
 
-  if (response.task_ins_list_size() > 0) {
-    flwr::proto::TaskIns task_ins = response.task_ins_list().at(0);
-    if (validate_task_ins(task_ins, true)) {
+  if (response.messages_list_size() > 0) {
+    flwr::proto::Message message = response.messages_list().at(0);
+    if (validate_message(message, true)) {
       std::lock_guard<std::mutex> state_lock(state_mutex);
-      state[KEY_TASK_INS] = task_ins;
-      return task_ins;
+      state[KEY_MESSAGE] = message;
+      return message;
     }
   }
-  std::cerr << "TaskIns list is empty." << std::endl;
+  std::cerr << "Messages list is empty." << std::endl;
   return std::nullopt;
 }
 
-void send(Communicator *communicator, flwr::proto::TaskRes task_res) {
+void send(Communicator *communicator, flwr::proto::Message message) {
   auto node = get_node_from_store();
   if (!node) {
     return;
   }
 
-  auto task_ins = get_current_task_ins();
-  if (!task_ins) {
+  auto ref_message = get_current_message();
+  if (!ref_message) {
     return;
   }
 
-  if (!validate_task_res(task_res)) {
-    std::cerr << "TaskRes is invalid" << std::endl;
+  if (!validate_message(message, false)) {
+    std::cerr << "Message is invalid" << std::endl;
     std::lock_guard<std::mutex> state_lock(state_mutex);
-    state[KEY_TASK_INS].reset();
+    state[KEY_MESSAGE].reset();
     return;
   }
 
-  flwr::proto::TaskRes new_task_res =
-      configure_task_res(task_res, *task_ins, *node);
+  flwr::proto::Message new_message =
+      configure_message(message, *ref_message, *node);
 
-  flwr::proto::PushTaskResRequest request;
-  *request.add_task_res_list() = new_task_res;
-  flwr::proto::PushTaskResResponse response;
+  flwr::proto::PushMessagesRequest request;
+  *request.mutable_node() = *node;
+  *request.add_messages_list() = new_message;
+  flwr::proto::PushMessagesResponse response;
 
-  communicator->send_push_task_res(request, &response);
+  communicator->send_push_messages(request, &response);
 
   {
     std::lock_guard<std::mutex> state_lock(state_mutex);
-    state[KEY_TASK_INS].reset();
+    state[KEY_MESSAGE].reset();
   }
 }

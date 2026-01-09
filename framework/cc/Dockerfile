@@ -24,14 +24,15 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     ca-certificates \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /workspace
 
 # Copy the framework/cc directory and proto files
-COPY framework/cc/flwr /workspace/framework/cc/flwr
-COPY framework/proto /workspace/framework/proto
+COPY flwr /workspace/framework/cc/flwr
+COPY ../proto /workspace/framework/proto
 
 # Build the library
 WORKDIR /workspace/framework/cc/flwr

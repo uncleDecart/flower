@@ -7,6 +7,18 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Assume gRPC and other dependencies are necessary
 include(FetchContent)
+
+# Configure gRPC and dependency options
+set(gRPC_BUILD_TESTS OFF CACHE BOOL "Disable gRPC tests")
+set(gRPC_BUILD_CSHARP_EXT OFF CACHE BOOL "Disable C# extension")
+set(gRPC_INSTALL OFF CACHE BOOL "Disable gRPC install")
+set(protobuf_INSTALL OFF CACHE BOOL "Disable protobuf install")
+set(protobuf_BUILD_TESTS OFF CACHE BOOL "Disable protobuf tests")
+set(utf8_range_ENABLE_INSTALL OFF CACHE BOOL "Disable utf8_range install")
+set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "Disable abseil install")
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate C++ standard to abseil")
+set(gRPC_SSL_PROVIDER module CACHE STRING "Use bundled BoringSSL")
+
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
