@@ -1,5 +1,5 @@
 #include "message_handler.h"
-#include "flwr/proto/task.pb.h"
+#include "flwr/proto/message.pb.h"
 #include <variant>
 
 std::tuple<flwr_local::RecordSet, int>

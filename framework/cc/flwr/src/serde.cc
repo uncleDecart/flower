@@ -1,5 +1,5 @@
 #include "serde.h"
-#include "flwr/proto/recordset.pb.h"
+#include "flwr/proto/recorddict.pb.h"
 #include "typing.h"
 
 /**

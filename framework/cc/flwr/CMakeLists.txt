@@ -69,12 +69,24 @@ macro(GENERATE_AND_COPY PROTO_NAME)
 endmacro()
 
 # Using the above macro for all proto files
+# Generate all proto files to match Python implementation
 GENERATE_AND_COPY(transport)
 GENERATE_AND_COPY(node)
-GENERATE_AND_COPY(task)
-GENERATE_AND_COPY(fleet)
 GENERATE_AND_COPY(error)
-GENERATE_AND_COPY(recordset)
+GENERATE_AND_COPY(recorddict)
+GENERATE_AND_COPY(message)
+GENERATE_AND_COPY(run)
+GENERATE_AND_COPY(fab)
+GENERATE_AND_COPY(heartbeat)
+GENERATE_AND_COPY(fleet)
+GENERATE_AND_COPY(control)
+GENERATE_AND_COPY(federation)
+GENERATE_AND_COPY(log)
+GENERATE_AND_COPY(grpcadapter)
+GENERATE_AND_COPY(appio)
+GENERATE_AND_COPY(clientappio)
+GENERATE_AND_COPY(serverappio)
+GENERATE_AND_COPY(simulationio)
 
 add_library(flwr_grpc_proto STATIC ${ALL_PROTO_FILES})
 
