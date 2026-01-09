@@ -58,7 +58,7 @@ std::tuple<flwr_local::RecordSet, int, bool> handle(flwr_local::Client *client,
   if (task.task_type() == "evaluate") {
     return std::make_tuple(_evaluate(client, task.recordset()), 0, true);
   }
-  throw "Unkown server message";
+  throw "Unknown server message";
 }
 
 std::tuple<flwr::proto::TaskRes, int, bool>
