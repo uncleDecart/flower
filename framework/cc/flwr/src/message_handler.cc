@@ -77,25 +77,18 @@ handle_task(flwr_local::Client *client, const flwr::proto::TaskIns &task_ins) {
   task_res.set_group_id(task_ins.group_id());
   task_res.set_run_id(task_ins.run_id());
 
-  std::unique_ptr<flwr::proto::Task> task =
-      std::make_unique<flwr::proto::Task>();
+  flwr::proto::Task task;
 
-  std::unique_ptr<flwr::proto::RecordSet> proto_recordset_ptr =
-      std::make_unique<flwr::proto::RecordSet>(
-          recordset_to_proto(std::get<0>(legacy_res)));
-
-  task->set_allocated_recordset(proto_recordset_ptr.release());
-  task->set_task_type(received_task.task_type());
-  task->set_ttl(3600);
-  task->set_created_at(std::chrono::duration_cast<std::chrono::seconds>(
+  *task.mutable_recordset() = recordset_to_proto(std::get<0>(legacy_res));
+  task.set_task_type(received_task.task_type());
+  task.set_ttl(3600);
+  task.set_created_at(std::chrono::duration_cast<std::chrono::seconds>(
                            std::chrono::system_clock::now().time_since_epoch())
                            .count());
-  task->set_allocated_consumer(
-      std::make_unique<flwr::proto::Node>(received_task.producer()).release());
-  task->set_allocated_producer(
-      std::make_unique<flwr::proto::Node>(received_task.consumer()).release());
+  *task.mutable_consumer() = received_task.producer();
+  *task.mutable_producer() = received_task.consumer();
 
-  task_res.set_allocated_task(task.release());
+  *task_res.mutable_task() = task;
 
   std::tuple<flwr::proto::TaskRes, int, bool> tuple = std::make_tuple(
       task_res, std::get<1>(legacy_res), std::get<2>(legacy_res));

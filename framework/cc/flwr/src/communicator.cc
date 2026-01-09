@@ -44,15 +44,8 @@ configure_task_res(const flwr::proto::TaskRes &task_res,
   *result_task_res.mutable_task() = task_res.task();
 
   // Construct and set the producer and consumer for the task
-  std::unique_ptr<flwr::proto::Node> new_producer =
-      std::make_unique<flwr::proto::Node>(producer);
-  result_task_res.mutable_task()->set_allocated_producer(
-      new_producer.release());
-
-  std::unique_ptr<flwr::proto::Node> new_consumer =
-      std::make_unique<flwr::proto::Node>(ref_task_ins.task().producer());
-  result_task_res.mutable_task()->set_allocated_consumer(
-      new_consumer.release());
+  *result_task_res.mutable_task()->mutable_producer() = producer;
+  *result_task_res.mutable_task()->mutable_consumer() = ref_task_ins.task().producer();
 
   // Set ancestry in the task
   result_task_res.mutable_task()->add_ancestry(ref_task_ins.task_id());
@@ -107,15 +100,11 @@ void delete_node(Communicator *communicator) {
   flwr::proto::DeleteNodeRequest delete_node_request;
   flwr::proto::DeleteNodeResponse delete_node_response;
 
-  auto heap_node = new flwr::proto::Node(*node);
-  delete_node_request.set_allocated_node(heap_node);
+  *delete_node_request.mutable_node() = *node;
 
   if (!communicator->send_delete_node(delete_node_request,
                                       &delete_node_response)) {
-    delete heap_node; // Make sure to delete if status is not ok
     return;
-  } else {
-    delete_node_request.release_node(); // Release if status is ok
   }
 
   delete_node_from_store();
@@ -129,13 +118,9 @@ std::optional<flwr::proto::TaskIns> receive(Communicator *communicator) {
   flwr::proto::PullTaskInsResponse response;
   flwr::proto::PullTaskInsRequest request;
 
-  request.set_allocated_node(new flwr::proto::Node(*node));
+  *request.mutable_node() = *node;
 
   bool success = communicator->send_pull_task_ins(request, &response);
-
-  // Release ownership so that the heap_node won't be deleted when request
-  // goes out of scope.
-  request.release_node();
 
   if (!success) {
     return std::nullopt;
