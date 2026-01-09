@@ -212,47 +212,49 @@ flwr_local::Array array_from_proto(const flwr::proto::Array &protoArray) {
 }
 
 flwr::proto::ParametersRecord
-parameters_record_to_proto(const flwr_local::ParametersRecord &record) {
-  flwr::proto::ParametersRecord protoRecord;
+flwr::proto::ArrayRecord
+array_record_to_proto(const flwr_local::ParametersRecord &record) {
+  flwr::proto::ArrayRecord protoRecord;
   for (const auto &[key, value] : record) {
-    *protoRecord.add_data_keys() = key;
-    *protoRecord.add_data_values() = array_to_proto(value);
+    auto *item = protoRecord.add_items();
+    item->set_key(key);
+    *item->mutable_value() = array_to_proto(value);
   }
   return protoRecord;
 }
 
 flwr_local::ParametersRecord
-parameters_record_from_proto(const flwr::proto::ParametersRecord &protoRecord) {
+array_record_from_proto(const flwr::proto::ArrayRecord &protoRecord) {
   flwr_local::ParametersRecord record;
 
-  auto keys = protoRecord.data_keys();
-  auto values = protoRecord.data_values();
-  for (size_t i = 0; i < keys.size(); ++i) {
-    record[keys[i]] = array_from_proto(values[i]);
+  for (const auto &item : protoRecord.items()) {
+    record[item.key()] = array_from_proto(item.value());
   }
   return record;
 }
 
-flwr::proto::MetricsRecord
-metrics_record_to_proto(const flwr_local::MetricsRecord &record) {
-  flwr::proto::MetricsRecord protoRecord;
+flwr::proto::MetricRecord
+metric_record_to_proto(const flwr_local::MetricsRecord &record) {
+  flwr::proto::MetricRecord protoRecord;
 
   for (const auto &[key, value] : record) {
-    auto &data = (*protoRecord.mutable_data())[key];
+    auto *item = protoRecord.add_items();
+    item->set_key(key);
+    auto *proto_value = item->mutable_value();
 
     if (std::holds_alternative<int>(value)) {
-      data.set_sint64(std::get<int>(value));
+      proto_value->set_sint64(std::get<int>(value));
     } else if (std::holds_alternative<double>(value)) {
-      data.set_double_(std::get<double>(value));
+      proto_value->set_double_(std::get<double>(value));
     } else if (std::holds_alternative<std::vector<int>>(value)) {
       auto &int_list = std::get<std::vector<int>>(value);
-      auto *list = data.mutable_sint64_list();
+      auto *list = proto_value->mutable_sint_list();
       for (int val : int_list) {
         list->add_vals(val);
       }
     } else if (std::holds_alternative<std::vector<double>>(value)) {
       auto &double_list = std::get<std::vector<double>>(value);
-      auto *list = data.mutable_double_list();
+      auto *list = proto_value->mutable_double_list();
       for (double val : double_list) {
         list->add_vals(val);
       }
@@ -263,65 +265,68 @@ metrics_record_to_proto(const flwr_local::MetricsRecord &record) {
 }
 
 flwr_local::MetricsRecord
-metrics_record_from_proto(const flwr::proto::MetricsRecord &protoRecord) {
+metric_record_from_proto(const flwr::proto::MetricRecord &protoRecord) {
   flwr_local::MetricsRecord record;
 
-  for (const auto &[key, value] : protoRecord.data()) {
+  for (const auto &item : protoRecord.items()) {
+    const auto &value = item.value();
     if (value.has_sint64()) {
-      record[key] = (int)value.sint64();
+      record[item.key()] = (int)value.sint64();
     } else if (value.has_double_()) {
-      record[key] = (double)value.double_();
-    } else if (value.has_sint64_list()) {
+      record[item.key()] = (double)value.double_();
+    } else if (value.has_sint_list()) {
       std::vector<int> int_list;
-      for (const auto sint : value.sint64_list().vals()) {
+      for (const auto sint : value.sint_list().vals()) {
         int_list.push_back((int)sint);
       }
-      record[key] = int_list;
+      record[item.key()] = int_list;
     } else if (value.has_double_list()) {
       std::vector<double> double_list;
       for (const auto proto_double : value.double_list().vals()) {
         double_list.push_back((double)proto_double);
       }
-      record[key] = double_list;
+      record[item.key()] = double_list;
     }
   }
   return record;
 }
 
-flwr::proto::ConfigsRecord
-configs_record_to_proto(const flwr_local::ConfigsRecord &record) {
-  flwr::proto::ConfigsRecord protoRecord;
+flwr::proto::ConfigRecord
+config_record_to_proto(const flwr_local::ConfigsRecord &record) {
+  flwr::proto::ConfigRecord protoRecord;
 
   for (const auto &[key, value] : record) {
-    auto &data = (*protoRecord.mutable_data())[key];
+    auto *item = protoRecord.add_items();
+    item->set_key(key);
+    auto *proto_value = item->mutable_value();
 
     if (std::holds_alternative<int>(value)) {
-      data.set_sint64(std::get<int>(value));
+      proto_value->set_sint64(std::get<int>(value));
     } else if (std::holds_alternative<double>(value)) {
-      data.set_double_(std::get<double>(value));
+      proto_value->set_double_(std::get<double>(value));
     } else if (std::holds_alternative<bool>(value)) {
-      data.set_bool_(std::get<bool>(value));
+      proto_value->set_bool_(std::get<bool>(value));
     } else if (std::holds_alternative<std::string>(value)) {
-      data.set_string(std::get<std::string>(value));
+      proto_value->set_string(std::get<std::string>(value));
     } else if (std::holds_alternative<std::vector<int>>(value)) {
-      auto &list = *data.mutable_sint64_list();
+      auto *list = proto_value->mutable_sint_list();
       for (int val : std::get<std::vector<int>>(value)) {
-        list.add_vals(val);
+        list->add_vals(val);
       }
     } else if (std::holds_alternative<std::vector<double>>(value)) {
-      auto &list = *data.mutable_double_list();
+      auto *list = proto_value->mutable_double_list();
       for (double val : std::get<std::vector<double>>(value)) {
-        list.add_vals(val);
+        list->add_vals(val);
       }
     } else if (std::holds_alternative<std::vector<bool>>(value)) {
-      auto &list = *data.mutable_bool_list();
+      auto *list = proto_value->mutable_bool_list();
       for (bool val : std::get<std::vector<bool>>(value)) {
-        list.add_vals(val);
+        list->add_vals(val);
       }
     } else if (std::holds_alternative<std::vector<std::string>>(value)) {
-      auto &list = *data.mutable_string_list();
+      auto *list = proto_value->mutable_string_list();
       for (const auto &val : std::get<std::vector<std::string>>(value)) {
-        list.add_vals(val);
+        list->add_vals(val);
       }
     }
   }
@@ -330,53 +335,49 @@ configs_record_to_proto(const flwr_local::ConfigsRecord &record) {
 }
 
 flwr_local::ConfigsRecord
-configs_record_from_proto(const flwr::proto::ConfigsRecord &protoRecord) {
+config_record_from_proto(const flwr::proto::ConfigRecord &protoRecord) {
   flwr_local::ConfigsRecord record;
 
-  for (const auto &[key, value] : protoRecord.data()) {
-    if (value.has_sint64_list()) {
+  for (const auto &item : protoRecord.items()) {
+    const auto &value = item.value();
+    if (value.has_sint_list()) {
       std::vector<int> int_list;
-      for (const auto sint : value.sint64_list().vals()) {
+      for (const auto sint : value.sint_list().vals()) {
         int_list.push_back((int)sint);
       }
-      record[key] = int_list;
+      record[item.key()] = int_list;
     } else if (value.has_double_list()) {
       std::vector<double> double_list;
       for (const auto proto_double : value.double_list().vals()) {
         double_list.push_back((double)proto_double);
       }
-      record[key] = double_list;
+      record[item.key()] = double_list;
     } else if (value.has_bool_list()) {
       std::vector<bool> tmp_list;
       for (const auto proto_val : value.bool_list().vals()) {
         tmp_list.push_back((bool)proto_val);
       }
-      record[key] = tmp_list;
-    } else if (value.has_bytes_list()) {
-      std::vector<std::string> tmp_list;
-      for (const auto proto_val : value.bytes_list().vals()) {
-        tmp_list.push_back(proto_val);
-      }
-      record[key] = tmp_list;
+      record[item.key()] = tmp_list;
     } else if (value.has_string_list()) {
       std::vector<std::string> tmp_list;
-      for (const auto proto_val : value.bytes_list().vals()) {
+      for (const auto &proto_val : value.string_list().vals()) {
         tmp_list.push_back(proto_val);
       }
-      record[key] = tmp_list;
+      record[item.key()] = tmp_list;
     } else if (value.has_sint64()) {
-      record[key] = (int)value.sint64();
+      record[item.key()] = (int)value.sint64();
     } else if (value.has_double_()) {
-      record[key] = (double)value.double_();
+      record[item.key()] = (double)value.double_();
     } else if (value.has_bool_()) {
-      record[key] = value.bool_();
+      record[item.key()] = value.bool_();
     } else if (value.has_bytes()) {
-      record[key] = value.bytes();
+      record[item.key()] = value.bytes();
     } else if (value.has_string()) {
-      record[key] = value.string();
+      record[item.key()] = value.string();
     }
   }
   return record;
+}
 }
 
 flwr_local::Parameters
@@ -592,11 +593,11 @@ recorddict_from_proto(const flwr::proto::RecordDict &recorddict) {
   for (const auto &item : recorddict.items()) {
     if (item.has_array_record()) {
       // Array records map to parameters
-      parametersRecords[item.key()] = parameters_record_from_proto_array(item.array_record());
+      parametersRecords[item.key()] = array_record_from_proto(item.array_record());
     } else if (item.has_metric_record()) {
-      metricsRecords[item.key()] = metrics_record_from_proto(item.metric_record());
+      metricsRecords[item.key()] = metric_record_from_proto(item.metric_record());
     } else if (item.has_config_record()) {
-      configsRecords[item.key()] = configs_record_from_proto(item.config_record());
+      configsRecords[item.key()] = config_record_from_proto(item.config_record());
     }
   }
 
@@ -611,19 +612,19 @@ recorddict_to_proto(const flwr_local::RecordSet &recordset) {
   for (const auto &[key, param_record] : recordset.getParametersRecords()) {
     auto *item = proto_recorddict.add_items();
     item->set_key(key);
-    *item->mutable_array_record() = parameters_record_to_proto_array(param_record);
+    *item->mutable_array_record() = array_record_to_proto(param_record);
   }
 
   for (const auto &[key, metrics_record] : recordset.getMetricsRecords()) {
     auto *item = proto_recorddict.add_items();
     item->set_key(key);
-    *item->mutable_metric_record() = metrics_record_to_proto(metrics_record);
+    *item->mutable_metric_record() = metric_record_to_proto(metrics_record);
   }
 
   for (const auto &[key, configs_record] : recordset.getConfigsRecords()) {
     auto *item = proto_recorddict.add_items();
     item->set_key(key);
-    *item->mutable_config_record() = configs_record_to_proto(configs_record);
+    *item->mutable_config_record() = config_record_to_proto(configs_record);
   }
 
   return proto_recorddict;
