@@ -582,46 +582,49 @@ recordset_from_evaluate_res(const flwr_local::EvaluateRes &evaluate_res) {
 }
 
 flwr_local::RecordSet
-recordset_from_proto(const flwr::proto::RecordSet &recordset) {
+recorddict_from_proto(const flwr::proto::RecordDict &recorddict) {
 
   std::map<std::string, flwr_local::ParametersRecord> parametersRecords;
   std::map<std::string, flwr_local::MetricsRecord> metricsRecords;
   std::map<std::string, flwr_local::ConfigsRecord> configsRecords;
 
-  for (const auto &[key, param_record] : recordset.parameters()) {
-    parametersRecords[key] = parameters_record_from_proto(param_record);
-  }
-
-  for (const auto &[key, metrics_record] : recordset.metrics()) {
-    metricsRecords[key] = metrics_record_from_proto(metrics_record);
-  }
-
-  for (const auto &[key, configs_record] : recordset.configs()) {
-    configsRecords[key] = configs_record_from_proto(configs_record);
+  // RecordDict uses repeated items instead of maps
+  for (const auto &item : recorddict.items()) {
+    if (item.has_array_record()) {
+      // Array records map to parameters
+      parametersRecords[item.key()] = parameters_record_from_proto_array(item.array_record());
+    } else if (item.has_metric_record()) {
+      metricsRecords[item.key()] = metrics_record_from_proto(item.metric_record());
+    } else if (item.has_config_record()) {
+      configsRecords[item.key()] = configs_record_from_proto(item.config_record());
+    }
   }
 
   return flwr_local::RecordSet(parametersRecords, metricsRecords,
                                configsRecords);
 }
 
-flwr::proto::RecordSet
-recordset_to_proto(const flwr_local::RecordSet &recordset) {
-  flwr::proto::RecordSet proto_recordset;
+flwr::proto::RecordDict
+recorddict_to_proto(const flwr_local::RecordSet &recordset) {
+  flwr::proto::RecordDict proto_recorddict;
 
   for (const auto &[key, param_record] : recordset.getParametersRecords()) {
-    (*(proto_recordset.mutable_parameters()))[key] =
-        parameters_record_to_proto(param_record);
+    auto *item = proto_recorddict.add_items();
+    item->set_key(key);
+    *item->mutable_array_record() = parameters_record_to_proto_array(param_record);
   }
 
   for (const auto &[key, metrics_record] : recordset.getMetricsRecords()) {
-    (*(proto_recordset.mutable_metrics()))[key] =
-        metrics_record_to_proto(metrics_record);
+    auto *item = proto_recorddict.add_items();
+    item->set_key(key);
+    *item->mutable_metric_record() = metrics_record_to_proto(metrics_record);
   }
 
   for (const auto &[key, configs_record] : recordset.getConfigsRecords()) {
-    (*(proto_recordset.mutable_configs()))[key] =
-        configs_record_to_proto(configs_record);
+    auto *item = proto_recorddict.add_items();
+    item->set_key(key);
+    *item->mutable_config_record() = configs_record_to_proto(configs_record);
   }
 
-  return proto_recordset;
+  return proto_recorddict;
 }
