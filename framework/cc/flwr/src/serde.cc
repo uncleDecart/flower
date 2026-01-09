@@ -211,7 +211,6 @@ flwr_local::Array array_from_proto(const flwr::proto::Array &protoArray) {
   return array;
 }
 
-flwr::proto::ParametersRecord
 flwr::proto::ArrayRecord
 array_record_to_proto(const flwr_local::ParametersRecord &record) {
   flwr::proto::ArrayRecord protoRecord;
@@ -377,7 +376,6 @@ config_record_from_proto(const flwr::proto::ConfigRecord &protoRecord) {
     }
   }
   return record;
-}
 }
 
 flwr_local::Parameters
