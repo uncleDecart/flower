@@ -70,22 +70,39 @@ std::optional<flwr::proto::Message> get_current_message() {
 }
 
 void create_node(Communicator *communicator) {
-  flwr::proto::CreateNodeRequest create_node_request;
-  flwr::proto::CreateNodeResponse create_node_response;
-
-  create_node_request.set_ping_interval(300.0);
-
-  communicator->send_create_node(create_node_request, &create_node_response);
-
-  // Validate the response
-  if (!create_node_response.has_node()) {
-    std::cerr << "Received response does not contain a node." << std::endl;
+  // Step 1: Register the node
+  flwr::proto::RegisterNodeFleetRequest register_request;
+  flwr::proto::RegisterNodeFleetResponse register_response;
+  
+  // Set a dummy public key for now (in real implementation, this should be generated)
+  register_request.set_public_key("dummy_public_key");
+  
+  if (!communicator->send_register_node(register_request, &register_response)) {
+    std::cerr << "Failed to register node." << std::endl;
     return;
   }
-
+  
+  uint64_t node_id = register_response.node_id();
+  
+  // Step 2: Activate the node
+  flwr::proto::ActivateNodeRequest activate_request;
+  flwr::proto::ActivateNodeResponse activate_response;
+  
+  activate_request.set_public_key("dummy_public_key");
+  activate_request.set_heartbeat_interval(300.0);
+  
+  if (!communicator->send_activate_node(activate_request, &activate_response)) {
+    std::cerr << "Failed to activate node." << std::endl;
+    return;
+  }
+  
+  // Create a Node object and store it
+  flwr::proto::Node node;
+  node.set_node_id(node_id);
+  
   {
     std::lock_guard<std::mutex> lock(node_store_mutex);
-    node_store[KEY_NODE] = create_node_response.node();
+    node_store[KEY_NODE] = node;
   }
 }
 
@@ -94,16 +111,31 @@ void delete_node(Communicator *communicator) {
   if (!node) {
     return;
   }
-  flwr::proto::DeleteNodeRequest delete_node_request;
-  flwr::proto::DeleteNodeResponse delete_node_response;
-
-  *delete_node_request.mutable_node() = *node;
-
-  if (!communicator->send_delete_node(delete_node_request,
-                                      &delete_node_response)) {
+  
+  uint64_t node_id = node->node_id();
+  
+  // Step 1: Deactivate the node
+  flwr::proto::DeactivateNodeRequest deactivate_request;
+  flwr::proto::DeactivateNodeResponse deactivate_response;
+  
+  deactivate_request.set_node_id(node_id);
+  
+  if (!communicator->send_deactivate_node(deactivate_request, &deactivate_response)) {
+    std::cerr << "Failed to deactivate node." << std::endl;
+    // Continue to unregister even if deactivate fails
+  }
+  
+  // Step 2: Unregister the node
+  flwr::proto::UnregisterNodeFleetRequest unregister_request;
+  flwr::proto::UnregisterNodeFleetResponse unregister_response;
+  
+  unregister_request.set_node_id(node_id);
+  
+  if (!communicator->send_unregister_node(unregister_request, &unregister_response)) {
+    std::cerr << "Failed to unregister node." << std::endl;
     return;
   }
-
+  
   delete_node_from_store();
 }
 

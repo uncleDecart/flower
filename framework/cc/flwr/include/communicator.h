@@ -8,11 +8,17 @@
 
 class Communicator {
 public:
-  virtual bool send_create_node(flwr::proto::CreateNodeRequest request,
-                                flwr::proto::CreateNodeResponse *response) = 0;
+  virtual bool send_register_node(flwr::proto::RegisterNodeFleetRequest request,
+                                  flwr::proto::RegisterNodeFleetResponse *response) = 0;
 
-  virtual bool send_delete_node(flwr::proto::DeleteNodeRequest request,
-                                flwr::proto::DeleteNodeResponse *response) = 0;
+  virtual bool send_activate_node(flwr::proto::ActivateNodeRequest request,
+                                  flwr::proto::ActivateNodeResponse *response) = 0;
+
+  virtual bool send_deactivate_node(flwr::proto::DeactivateNodeRequest request,
+                                    flwr::proto::DeactivateNodeResponse *response) = 0;
+
+  virtual bool send_unregister_node(flwr::proto::UnregisterNodeFleetRequest request,
+                                    flwr::proto::UnregisterNodeFleetResponse *response) = 0;
 
   virtual bool
   send_pull_messages(flwr::proto::PullMessagesRequest request,
