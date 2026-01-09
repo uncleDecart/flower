@@ -12,16 +12,16 @@ void start::start_client(std::string server_address, flwr_local::Client *client,
     create_node(&communicator);
 
     while (true) {
-      auto task_ins = receive(&communicator);
-      if (!task_ins) {
+      auto message = receive(&communicator);
+      if (!message) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
         continue;
       }
 
-      auto [task_res, sleep_duration, keep_going] =
-          handle_task(client, task_ins.value());
+      auto [result_message, sleep_duration, keep_going] =
+          handle_message(client, message.value());
 
-      send(&communicator, task_res);
+      send(&communicator, result_message);
       if (!keep_going) {
         break;
       }
