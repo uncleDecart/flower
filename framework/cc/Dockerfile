@@ -31,8 +31,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /workspace
 
 # Copy the framework/cc directory and proto files
-COPY flwr /workspace/framework/cc/flwr
-COPY ../proto /workspace/framework/proto
+COPY framework/cc/flwr /workspace/framework/cc/flwr
+COPY framework/proto /workspace/framework/proto
 
 # Build the library
 WORKDIR /workspace/framework/cc/flwr
