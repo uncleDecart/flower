@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic -Wl,--dependency-file=CMakeFiles/acountry.dir/link.d CMakeFiles/acountry.dir/acountry.c.o CMakeFiles/acountry.dir/ares_getopt.c.o CMakeFiles/acountry.dir/__/lib/ares_nowarn.c.o CMakeFiles/acountry.dir/__/lib/ares_strcasecmp.c.o -o ../../bin/acountry  ../../lib/libcares.a

@@ -1,0 +1,14 @@
+# Target labels
+ grpc-populate
+# Source files and their labels
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/CMakeFiles/grpc-populate
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/CMakeFiles/grpc-populate.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/CMakeFiles/grpc-populate-complete.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-build.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-configure.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-download.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-install.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-mkdir.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-patch.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-test.rule
+/home/runner/work/flower/flower/framework/cc/flwr/build-proto/_deps/grpc-subbuild/grpc-populate-prefix/src/grpc-populate-stamp/grpc-populate-update.rule

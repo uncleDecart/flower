@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/simplify_test.dir/link.d CMakeFiles/simplify_test.dir/re2/testing/simplify_test.cc.o CMakeFiles/simplify_test.dir/util/test.cc.o -o simplify_test  libtesting.a libre2.a
