@@ -33,8 +33,11 @@ WORKDIR /workspace
 # Copy the entire project structure
 COPY . .
 
+# Remove pre-generated proto files to force regeneration
+RUN rm -f framework/cc/flwr/include/flwr/proto/*.pb.cc framework/cc/flwr/include/flwr/proto/*.pb.h
+
 # Build the C++ client with local flwr
-RUN cmake -S . -B build -DUSE_LOCAL_FLWR=ON && \
+RUN cmake -S examples/quickstart-cpp -B build -DUSE_LOCAL_FLWR=ON && \
     cmake --build build
 
 # Default command
