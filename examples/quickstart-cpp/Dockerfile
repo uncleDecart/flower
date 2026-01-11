@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     ca-certificates \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -32,8 +33,8 @@ WORKDIR /workspace
 # Copy the entire project structure
 COPY . .
 
-# Build the C++ client
-RUN cmake -S . -B build && \
+# Build the C++ client with local flwr
+RUN cmake -S . -B build -DUSE_LOCAL_FLWR=ON && \
     cmake --build build
 
 # Default command
