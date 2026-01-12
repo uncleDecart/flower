@@ -36,15 +36,16 @@ RUN apt-get update && apt-get install -y \
 
 # Build and install Protobuf 3.21.12 from source (compatible with gRPC v1.68.0)
 RUN cd /tmp && \
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.21.12/protobuf-all-3.21.12.tar.gz && \
-    tar -xzf protobuf-all-3.21.12.tar.gz && \
+    wget https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz && \
+    tar -xzf v3.21.12.tar.gz && \
     cd protobuf-3.21.12 && \
+    ./autogen.sh && \
     ./configure --prefix=/usr && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
     cd / && \
-    rm -rf /tmp/protobuf-*
+    rm -rf /tmp/protobuf-* /tmp/v3.21.12.tar.gz
 
 # Set working directory
 WORKDIR /workspace
