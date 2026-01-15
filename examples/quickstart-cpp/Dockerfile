@@ -34,22 +34,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Build and install Protobuf 3.21.12 using CMake (generates ProtobufConfig.cmake)
-RUN cd /tmp && \
-    wget https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz && \
-    tar -xzf v3.21.12.tar.gz && \
-    cd protobuf-3.21.12 && \
-    cmake -S cmake -B build \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -Dprotobuf_BUILD_TESTS=OFF \
-        -Dprotobuf_BUILD_SHARED_LIBS=ON && \
-    cmake --build build -j$(nproc) && \
-    cmake --install build && \
-    ldconfig && \
-    cd / && \
-    rm -rf /tmp/protobuf-* /tmp/v3.21.12.tar.gz
-
 # Set working directory
 WORKDIR /workspace
 

@@ -21,10 +21,6 @@ set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "Disable abseil install")
 set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate C++ standard to abseil")
 set(gRPC_SSL_PROVIDER module CACHE STRING "Use bundled BoringSSL")
 
-# Force gRPC to use system-installed Protobuf (built in Dockerfile)
-set(gRPC_PROTOBUF_PROVIDER "package" CACHE STRING "Use system protobuf")
-find_package(Protobuf REQUIRED)
-
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
