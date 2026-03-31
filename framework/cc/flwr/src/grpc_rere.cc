@@ -15,13 +15,13 @@ gRPCRereCommunicator::gRPCRereCommunicator(std::string server_address,
   stub = flwr::proto::Fleet::NewStub(channel);
 }
 
-bool gRPCRereCommunicator::send_create_node(
-    flwr::proto::CreateNodeRequest request,
-    flwr::proto::CreateNodeResponse *response) {
+bool gRPCRereCommunicator::send_register_node(
+    flwr::proto::RegisterNodeFleetRequest request,
+    flwr::proto::RegisterNodeFleetResponse *response) {
   grpc::ClientContext context;
-  grpc::Status status = stub->CreateNode(&context, request, response);
+  grpc::Status status = stub->RegisterNode(&context, request, response);
   if (!status.ok()) {
-    std::cerr << "CreateNode RPC failed: " << status.error_message()
+    std::cerr << "RegisterNode RPC failed: " << status.error_message()
               << std::endl;
     return false;
   }
@@ -29,14 +29,13 @@ bool gRPCRereCommunicator::send_create_node(
   return true;
 }
 
-bool gRPCRereCommunicator::send_delete_node(
-    flwr::proto::DeleteNodeRequest request,
-    flwr::proto::DeleteNodeResponse *response) {
+bool gRPCRereCommunicator::send_activate_node(
+    flwr::proto::ActivateNodeRequest request,
+    flwr::proto::ActivateNodeResponse *response) {
   grpc::ClientContext context;
-  grpc::Status status = stub->DeleteNode(&context, request, response);
-
+  grpc::Status status = stub->ActivateNode(&context, request, response);
   if (!status.ok()) {
-    std::cerr << "DeleteNode RPC failed with status: " << status.error_message()
+    std::cerr << "ActivateNode RPC failed: " << status.error_message()
               << std::endl;
     return false;
   }
@@ -44,14 +43,44 @@ bool gRPCRereCommunicator::send_delete_node(
   return true;
 }
 
-bool gRPCRereCommunicator::send_pull_task_ins(
-    flwr::proto::PullTaskInsRequest request,
-    flwr::proto::PullTaskInsResponse *response) {
+bool gRPCRereCommunicator::send_deactivate_node(
+    flwr::proto::DeactivateNodeRequest request,
+    flwr::proto::DeactivateNodeResponse *response) {
   grpc::ClientContext context;
-  grpc::Status status = stub->PullTaskIns(&context, request, response);
+  grpc::Status status = stub->DeactivateNode(&context, request, response);
 
   if (!status.ok()) {
-    std::cerr << "PullTaskIns RPC failed with status: "
+    std::cerr << "DeactivateNode RPC failed with status: " << status.error_message()
+              << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool gRPCRereCommunicator::send_unregister_node(
+    flwr::proto::UnregisterNodeFleetRequest request,
+    flwr::proto::UnregisterNodeFleetResponse *response) {
+  grpc::ClientContext context;
+  grpc::Status status = stub->UnregisterNode(&context, request, response);
+
+  if (!status.ok()) {
+    std::cerr << "UnregisterNode RPC failed with status: " << status.error_message()
+              << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool gRPCRereCommunicator::send_pull_messages(
+    flwr::proto::PullMessagesRequest request,
+    flwr::proto::PullMessagesResponse *response) {
+  grpc::ClientContext context;
+  grpc::Status status = stub->PullMessages(&context, request, response);
+
+  if (!status.ok()) {
+    std::cerr << "PullMessages RPC failed with status: "
               << status.error_message() << std::endl;
     return false;
   }
@@ -59,14 +88,14 @@ bool gRPCRereCommunicator::send_pull_task_ins(
   return true;
 }
 
-bool gRPCRereCommunicator::send_push_task_res(
-    flwr::proto::PushTaskResRequest request,
-    flwr::proto::PushTaskResResponse *response) {
+bool gRPCRereCommunicator::send_push_messages(
+    flwr::proto::PushMessagesRequest request,
+    flwr::proto::PushMessagesResponse *response) {
   grpc::ClientContext context;
-  grpc::Status status = stub->PushTaskRes(&context, request, response);
+  grpc::Status status = stub->PushMessages(&context, request, response);
 
   if (!status.ok()) {
-    std::cerr << "PushTaskRes RPC failed with status: "
+    std::cerr << "PushMessages RPC failed with status: "
               << status.error_message() << std::endl;
     return false;
   }

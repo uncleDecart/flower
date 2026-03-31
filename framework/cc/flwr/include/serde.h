@@ -14,6 +14,7 @@
 
 #pragma once
 #include "flwr/proto/fleet.pb.h"
+#include "flwr/proto/recorddict.pb.h"
 #include "flwr/proto/transport.pb.h"
 #include "typing.h"
 
@@ -80,7 +81,7 @@ flwr::proto::ClientMessage_EvaluateRes
 evaluate_res_to_proto(flwr_local::EvaluateRes res);
 
 flwr_local::RecordSet
-recordset_from_proto(const flwr::proto::RecordSet &recordset);
+recorddict_from_proto(const flwr::proto::RecordDict &recorddict);
 
 flwr_local::FitIns recordset_to_fit_ins(const flwr_local::RecordSet &recordset,
                                         bool keep_input);
@@ -97,5 +98,5 @@ flwr_local::RecordSet recordset_from_fit_res(const flwr_local::FitRes &fit_res);
 flwr_local::RecordSet recordset_from_get_parameters_res(
     const flwr_local::ParametersRes &parameters_res);
 
-flwr::proto::RecordSet
-recordset_to_proto(const flwr_local::RecordSet &recordset);
+flwr::proto::RecordDict
+recorddict_to_proto(const flwr_local::RecordSet &recordset);

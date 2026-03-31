@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/mimics_pcre_test.dir/link.d CMakeFiles/mimics_pcre_test.dir/re2/testing/mimics_pcre_test.cc.o CMakeFiles/mimics_pcre_test.dir/util/test.cc.o -o mimics_pcre_test  libtesting.a libre2.a

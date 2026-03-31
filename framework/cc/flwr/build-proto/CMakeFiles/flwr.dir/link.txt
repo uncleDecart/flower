@@ -1,0 +1,2 @@
+/usr/bin/ar qc libflwr.a CMakeFiles/flwr.dir/src/communicator.cc.o CMakeFiles/flwr.dir/src/grpc_rere.cc.o CMakeFiles/flwr.dir/src/message_handler.cc.o CMakeFiles/flwr.dir/src/serde.cc.o CMakeFiles/flwr.dir/src/start.cc.o
+/usr/bin/ranlib libflwr.a

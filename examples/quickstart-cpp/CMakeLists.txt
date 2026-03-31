@@ -9,10 +9,22 @@ option(USE_LOCAL_FLWR "Use local Flower directory instead of fetching from GitHu
 ### Download gRPC 
 
 include(FetchContent)
+
+# Configure gRPC and dependency options
+set(gRPC_BUILD_TESTS OFF CACHE BOOL "Disable gRPC tests")
+set(gRPC_BUILD_CSHARP_EXT OFF CACHE BOOL "Disable C# extension")
+set(gRPC_INSTALL OFF CACHE BOOL "Disable gRPC install")
+set(protobuf_INSTALL OFF CACHE BOOL "Disable protobuf install")
+set(protobuf_BUILD_TESTS OFF CACHE BOOL "Disable protobuf tests")
+set(utf8_range_ENABLE_INSTALL OFF CACHE BOOL "Disable utf8_range install")
+set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "Disable abseil install")
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate C++ standard to abseil")
+set(gRPC_SSL_PROVIDER module CACHE STRING "Use bundled BoringSSL")
+
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG        v1.43.2
+  GIT_TAG        v1.68.0
 )
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(gRPC)
@@ -30,39 +42,19 @@ endif()
 ######################
 ### FLWR_LIB
 if(USE_LOCAL_FLWR)
-  set(FLWR_SOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+  # Use add_subdirectory to properly build the framework library
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../framework/cc/flwr ${CMAKE_BINARY_DIR}/flwr)
+  set(FLWR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../framework/cc/flwr/include")
 else()
   FetchContent_Declare(
     flwr_repo
     GIT_REPOSITORY https://github.com/flwrlabs/flower.git
     GIT_TAG        main
   )
-
-  FetchContent_GetProperties(flwr_repo)
-  if(NOT flwr_repo_POPULATED)
-    FetchContent_Populate(flwr_repo)
-  endif()
-
-  set(FLWR_SOURCE_ROOT "${flwr_repo_SOURCE_DIR}")
+  FetchContent_MakeAvailable(flwr_repo)
+  add_subdirectory(${flwr_repo_SOURCE_DIR}/framework/cc/flwr ${CMAKE_BINARY_DIR}/flwr)
+  set(FLWR_INCLUDE_DIR "${flwr_repo_SOURCE_DIR}/framework/cc/flwr/include")
 endif()
-
-set(FLWR_SDK_PATH "${FLWR_SOURCE_ROOT}/framework/cc/flwr")
-
-file(GLOB FLWR_SRCS "${FLWR_SDK_PATH}/src/*.cc")
-file(GLOB FLWR_PROTO_SRCS "${FLWR_SDK_PATH}/include/flwr/proto/*.cc")
-set(FLWR_INCLUDE_DIR "${FLWR_SDK_PATH}/include")
-
-add_library(flwr ${FLWR_SRCS} ${FLWR_PROTO_SRCS})
-
-target_link_libraries(flwr
-  ${_REFLECTION}
-  ${_GRPC_GRPCPP}
-  ${_PROTOBUF_LIBPROTOBUF}
-)
-
-target_include_directories(flwr PUBLIC
-  ${FLWR_INCLUDE_DIR}
-)
 
 ######################
 ### FLWR_CLIENT

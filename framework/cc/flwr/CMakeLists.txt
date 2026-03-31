@@ -7,10 +7,22 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Assume gRPC and other dependencies are necessary
 include(FetchContent)
+
+# Configure gRPC and dependency options
+set(gRPC_BUILD_TESTS OFF CACHE BOOL "Disable gRPC tests")
+set(gRPC_BUILD_CSHARP_EXT OFF CACHE BOOL "Disable C# extension")
+set(gRPC_INSTALL OFF CACHE BOOL "Disable gRPC install")
+set(protobuf_INSTALL OFF CACHE BOOL "Disable protobuf install")
+set(protobuf_BUILD_TESTS OFF CACHE BOOL "Disable protobuf tests")
+set(utf8_range_ENABLE_INSTALL OFF CACHE BOOL "Disable utf8_range install")
+set(ABSL_ENABLE_INSTALL OFF CACHE BOOL "Disable abseil install")
+set(ABSL_PROPAGATE_CXX_STD ON CACHE BOOL "Propagate C++ standard to abseil")
+set(gRPC_SSL_PROVIDER module CACHE STRING "Use bundled BoringSSL")
+
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG        v1.43.2
+  GIT_TAG        v1.68.0
 )
 FetchContent_MakeAvailable(gRPC)
 
@@ -69,12 +81,24 @@ macro(GENERATE_AND_COPY PROTO_NAME)
 endmacro()
 
 # Using the above macro for all proto files
+# Generate all proto files to match Python implementation
 GENERATE_AND_COPY(transport)
 GENERATE_AND_COPY(node)
-GENERATE_AND_COPY(task)
-GENERATE_AND_COPY(fleet)
 GENERATE_AND_COPY(error)
-GENERATE_AND_COPY(recordset)
+GENERATE_AND_COPY(recorddict)
+GENERATE_AND_COPY(message)
+GENERATE_AND_COPY(run)
+GENERATE_AND_COPY(fab)
+GENERATE_AND_COPY(heartbeat)
+GENERATE_AND_COPY(fleet)
+GENERATE_AND_COPY(control)
+GENERATE_AND_COPY(federation)
+GENERATE_AND_COPY(log)
+GENERATE_AND_COPY(grpcadapter)
+GENERATE_AND_COPY(appio)
+GENERATE_AND_COPY(clientappio)
+GENERATE_AND_COPY(serverappio)
+GENERATE_AND_COPY(simulationio)
 
 add_library(flwr_grpc_proto STATIC ${ALL_PROTO_FILES})
 
